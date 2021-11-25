@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Another necessary social network | Yatube</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+</head>
+
+<body>
+    <header>
+      {% block header %}
+        {% include 'includes/header.html' %}
+      {% endblock %}
+    </header>
+
+    <main>
+        <div class="container">
+            <h1>Another necessary social network</h1>
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer class="border-top text-center py-3">
+        {% include 'includes/footer.html' %}    
+    </footer> 
+
+</body>
+
+</html>

@@ -1,3 +1,14 @@
+yatube/sent_emails/
+
+yatube/static/
+yatube/posts/static/
+.vscode/
+.vscode
+
+.ve.cmd
+ve.cmd
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -38,6 +49,11 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover 
 htmlcov/
 .tox/
 .nox/
@@ -144,9 +160,9 @@ dmypy.json
 .history/
 
 .mypy_cache
+yatube/db.sqlite3.back
 
-# папки со статикой и медиа
-static/
-yatube/posts/static/
-yatube/media/
+# Media files from posts
+media/
 
+venv/
