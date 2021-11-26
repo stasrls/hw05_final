@@ -1,3 +1,4 @@
+from http import HTTPStatus
 import random
 import shutil
 import tempfile
@@ -170,7 +171,7 @@ class PaginatorViewsTest(TestCase):
         cls.urls_with_paginator = {
             reverse('posts:index'),
             reverse('posts:group_list', kwargs={'slug': cls.group.slug}),
-            reverse('posts:profile', kwargs={'username': cls.author.username})
+            reverse('posts:profile', kwargs={'username': cls.author.username}),
         }
 
     def test_first_page_contains_ten_records(self):
@@ -264,7 +265,7 @@ class PostImageTest(TestCase):
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
-class CommentTest(TestCase):
+class CacheTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -310,20 +311,6 @@ class CommentTest(TestCase):
         self.authorized_client.force_login(self.user)
         cache.clear()
 
-    def test_comment(self):
-        response = self.authorized_client.post(
-            reverse('posts:add_comment', kwargs={
-                'post_id': CommentTest.post.pk
-            }),
-            follow=True,
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(CommentTest.post.comments.count(), 1)
-        comment = CommentTest.post.comments.all()[0]
-        self.assertEqual(comment.text, CommentTest.comment.text)
-        self.assertEqual(comment.author, CommentTest.user)
-        self.assertEqual(comment.post, CommentTest.post)
-
     def test_cache_index_page(self):
         response = self.authorized_client.get(reverse('posts:index')).content
         Post.objects.create(
@@ -355,11 +342,13 @@ class FollowsTests(TestCase):
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(FollowsTests.user)
+        self.authorized_client_1 = Client()
+        self.authorized_client_1.force_login(FollowsTests.other_user)
         cache.clear()
 
     def test_follow(self):
         follow_count = Follow.objects.count()
-        self.authorized_client.post(reverse(
+        response = self.authorized_client.post(reverse(
             'posts:profile_follow', kwargs={'username': self.other_user})
         )
         self.assertTrue(
@@ -367,16 +356,62 @@ class FollowsTests(TestCase):
                 user=self.user, author=self.other_user).exists()
         )
         self.assertEqual(Follow.objects.count(), follow_count + 1)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
     def test_unfollow(self):
         Follow.objects.create(
             user=self.user,
             author=self.other_user
         )
-        self.authorized_client.post(reverse(
+        response = self.authorized_client.post(reverse(
             'posts:profile_unfollow', kwargs={'username': self.other_user})
         )
         self.assertFalse(
             Follow.objects.filter(
                 user=self.user, author=self.other_user).exists()
+        )
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+    def test_context_profile_follow(self):
+        self.authorized_client_1.get(
+            reverse(
+                'posts:profile_follow', kwargs={'username': self.user})
+        )
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.other_user, author=self.user).exists()
+        )
+
+    def test_context_profile_not_follow(self):
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_follow', kwargs={'username': self.user})
+        )
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.other_user, author=self.user).exists()
+        )
+
+    def test_context_index_follow(self):
+        response = self.authorized_client.get(
+            reverse(
+                'posts:profile_follow', kwargs={'username': self.user})
+        )
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.other_user, author=self.user).exists(),
+            response.context.get('page_obj').object_list
+        )
+
+    def test_context_index_not_follow(self):
+        response = self.authorized_client_1.get(
+            reverse(
+                'posts:profile_follow', kwargs={'username': self.user})
+        )
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.other_user, author=self.user).exists(),
+            response.context.get('page_obj').object_list
         )

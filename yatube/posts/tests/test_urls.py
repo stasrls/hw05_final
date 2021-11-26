@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from django.http import response
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -57,6 +58,16 @@ class StaticURLTests(TestCase):
         response = self.guest_client.get(reverse('posts:post_create'))
         self.assertRedirects(response, '/auth/login/?next=/create/')
 
+    def test_follow_url(self):
+        response = self.guest_client.get(
+            reverse('posts:follow_index')
+        )
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        response = self.authorized_client.get(
+            reverse('posts:follow_index')
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
 
 class PostURLTests(TestCase):
     @classmethod
@@ -108,6 +119,10 @@ class PostURLTests(TestCase):
             reverse('posts:post_edit', args={self.post.pk})
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
+        response = self.authorized_author.get(
+            reverse('posts:follow_index')
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_unexisting_page(self):
         response = self.guest_client.get('unexisting_page/')
@@ -117,6 +132,7 @@ class PostURLTests(TestCase):
         # Редирект гостя
         urls_names = [
             reverse('posts:post_create'),
+            reverse('posts:follow_index'),
             reverse('posts:post_edit', args={self.post.pk}),
         ]
         for reverse_name in urls_names:
@@ -150,6 +166,7 @@ class PostURLTests(TestCase):
             reverse('posts:group_list', args={self.group.slug}):
                 'posts/group_list.html',
             reverse('posts:post_create'): 'posts/create_post.html',
+            reverse('posts:follow_index'): 'posts/follow.html',
         }
         for reverse_name, template in url_templates_names.items():
             with self.subTest(reverse_name=reverse_name):
