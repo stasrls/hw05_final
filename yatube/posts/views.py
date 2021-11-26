@@ -123,7 +123,7 @@ def add_comment(request, post_id):
 @login_required
 def follow_index(request):
     template = 'posts/follow.html'
-    posts = get_object_or_404(Post, author__following__user=request.user)
+    posts = Post.objects.filter(author__following__user=request.user)
     page_obj = paginator_func(request, posts)
     context = {'page_obj': page_obj}
     return render(request, template, context)
@@ -144,7 +144,7 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    template = 'posts/follow.html'
+    template = 'posts/profile.html'
     get_object_or_404(
         Follow, user=request.user, author__username=username).delete()
     return redirect(template, username=username)

@@ -1,7 +1,7 @@
 from django.test import Client, TestCase
 
 
-class PostURLTests(TestCase):
+class StaticURLTests(TestCase):
     def setUp(self):
         self.guest_client = Client()
 
