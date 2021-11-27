@@ -372,46 +372,14 @@ class FollowsTests(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
-    def test_context_profile_follow(self):
-        self.authorized_client_1.get(
-            reverse(
-                'posts:profile_follow', kwargs={'username': self.user})
-        )
-        self.assertTrue(
-            Follow.objects.filter(
-                user=self.other_user, author=self.user).exists()
-        )
-
-    def test_context_profile_not_follow(self):
-        self.authorized_client.get(
-            reverse(
-                'posts:profile_follow', kwargs={'username': self.user})
-        )
-        self.assertFalse(
-            Follow.objects.filter(
-                user=self.other_user, author=self.user).exists()
-        )
-
     def test_context_index_follow(self):
-        response = self.authorized_client.get(
-            reverse(
-                'posts:profile_follow', kwargs={'username': self.user})
-        )
-        response = self.authorized_client.get(reverse('posts:follow_index'))
-        self.assertFalse(
-            Follow.objects.filter(
-                user=self.other_user, author=self.user).exists(),
-            response.context.get('page_obj').object_list
-        )
+        Follow.objects.create(user=self.other_user, author=self.user)
+        post = Post.objects.create(text='Тестовый текст', author=self.user)
+        response = self.authorized_client_1.get(reverse('posts:follow_index'))
+        self.assertContains(response, post.text)
 
     def test_context_index_not_follow(self):
-        response = self.authorized_client_1.get(
-            reverse(
-                'posts:profile_follow', kwargs={'username': self.user})
-        )
+        Follow.objects.create(user=self.other_user, author=self.user)
+        post = Post.objects.create(text='Тестовый текст', author=self.user)
         response = self.authorized_client.get(reverse('posts:follow_index'))
-        self.assertTrue(
-            Follow.objects.filter(
-                user=self.other_user, author=self.user).exists(),
-            response.context.get('page_obj').object_list
-        )
+        self.assertNotContains(response, post.text)
