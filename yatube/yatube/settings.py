@@ -7,7 +7,14 @@ SECRET_KEY = 'rw-7yd0=_xue#tazj=nl+5udzg7ucge#^f94gma^s#@8aszeq1'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver', '[::1]']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'testserver',
+    '[::1]',
+    'www.stasrls.pythonanywhere.com',
+    'stasrls.pythonanywhere.com',
+]
 
 
 INSTALLED_APPS = [
